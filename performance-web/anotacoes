@@ -1,0 +1,126 @@
+1. Minificação - Alguns sites permitem colar o código e fornecem a versão comprimida. Muito mecânico. 
+    uglify-js
+    comando: uglifyjs site/assets/js/busca.js -o dist/assets/js/busca.js
+
+    Para automatização desse processo é possível utilizar o gulp- npm install gulp-cli -g
+
+    Artigo que ajuda a solucionar o conflito de versões entre o fulp e o node.js
+    https://timonweb.com/javascript/how-to-fix-referenceerror-primordials-is-not-defined-error/
+
+2. Mudanças servidor gzip
+    nginx
+    https://www.youtube.com/watch?v=Sc0nJtVtWSI
+
+    em conf
+
+        server {
+            listen       3030;
+            server_name  localhost;
+            gzip on;
+            gzip_types text/css application/javascript image/svg+xml
+            #charset koi8-r;
+
+            #access_log  logs/host.access.log  main;
+
+            location / {
+                # root   html;
+            root "C:\Users\gusta\OneDrive\Área de Trabalho\Programacao\Alura\Programacao-Web\Performance-web\performance-web\site";
+                index  index.html index.htm;
+        }
+
+
+
+3. Análise com devtools
+
+    google chrome f12 - > network
+
+4. Imagens
+    a. Utilizar foto em tamanhos menores, no tamanho que será utilizado na página
+    b. remover metadados Kraken.io / tiny png / 
+        b.1 lossless
+        b.2 lossy
+    c. Ferramentas desktop para automatização 
+        c.1 Sem linha de comando ->para windows - Riot image
+        c.2 Com linha de comando ->para windows - Jpegtran jpegtran - optimize -progressive /site/assets/img/aluno-adriano.jpeg > dist/assets/img/aludo-adriano.jpeg
+        c.3 svgomg
+
+5. Ferramentas onlines
+    Após fazer o upload do projeto é possível utilizar as seguintes ferramentas:
+        pagespeed insights
+        webpagetest.org
+
+6. Concatenação de css
+    Gerar um css único para que seja feita uma grande request e não 25 pequenas
+    <!-- build:css assets/css/estilos.css -->
+       <!-- endbuild -->
+
+        <!-- build:js assets/js/scripts.js -->
+       <!-- endbuild -->
+    Gulp useref
+
+7. Sprites png
+    imagemagick.org
+    magick site/assets/img/*.png -append site/assets/img/diferenciais.png
+    manipular a sprite com css background-position-y
+
+    
+8. Sprites svg
+    Para ícones é mais interessante usar arquivos svg
+
+    é possível unir os arquivos svg usando o seguinte padrão 
+    
+    <svg width="0" height="0" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <symbol id="mobile" viewBox="0 0 22 33">
+                <path d="M17.612 29.584H3.604c-.384 0-.662-.304-.662-.76v-5.51h15.332v5.51c0 .456-.278.76-.662.76zM3.604 2.942h14.008c.384 0 .662.29.662.654v17.396H2.942V3.596c0-.364.278-.654.662-.654zm17.613.697A3.64 3.64 0 0 0 17.577 0H3.64A3.64 3.64 0 0 0 0 3.64v25.24a3.64 3.64 0 0 0 3.64 3.64h13.937a3.64 3.64 0 0 0 3.64-3.64V3.64zM10.837 25h-.175C9.744 25 9 25.783 9 26.75s.744 1.75 1.662 1.75h.175c.92 0 1.663-.783 1.663-1.75S11.756 25 10.837 25"/>
+            </symbol>
+        </defs>
+    </svg>
+
+
+    No html podemos chamar os icones pelo id criado como em:
+		<svg class="categoriaCard-item-icone"><use xlink:href="assets/img/categorias.svg#mobile"/></svg>
+
+
+    PAra não ter que gerar na mão é possível usar bibliotecas como svg-srite ou gerar direto do ink-scape e sketch , por exemplo
+
+ 9. script inline
+
+    Alguns arquivos pequenos js podem ser adicionados diretamente no html, evitando uma request a mais. É possível automatizar essa 
+    funcionalidade utilizando o gulp. Nesse projeto foi criado o o gulp useref. Para que ele consiga pegar o js e colocar dentro do html
+    é necessário que a tag script tenha o atributo inline
+
+    é possível fazer isso com imagens 
+
+    O ponto negativo é que aumenta o html e todas as vezes terá que ser refeito o recarregamento, inutilizando o cache. 
+    Deve-se manter um html menor que 14 kb
+
+10. Paralelização 
+
+    Utilizar mais de um hostname. O navegador permite 6 conexões por hostname. Ao utilizar mais de um será possível baixar mais pacotes
+    simultaneamente
+
+    Substitua nas imagens, por exemplo, o local do arquivo local para um endereço web
+
+    Utilizar no máximo 2 e 3 e conferir se na waterfall teve ganho
+
+11. Cache com expires
+    Configuração do servidor sobre o que deve ser salvo em cache
+    Response-headers Expires
+
+    Por exemplo, no nginx pode-se colocar na configuração do server expires 1d; para que salve por 1 
+    
+    Se o html for dinamico não deve ser salvo no cache
+
+    location /assets{
+	    expires 1y;
+        add_header Cache-Control "public";
+	}
+
+    É possível selecionar o que será armazenado pelo cache pelo código acima.
+    O add_header indica que qualqeur intermediário (firewall , proxy) pode fazer cache
+
+    Tamanho ideal do cache -> se você deixar um tempo alto e modificar o arquivo com o mesmo nome ele não será rebaixado. Isso 
+    pode entregar uma experiência ruim pro usuario. Uma prática é mudar o nome com versionamento.
+
+    No arquivo gulp foi criado uma função que faz isso e atualiza o html e os css, js com o número da versão
